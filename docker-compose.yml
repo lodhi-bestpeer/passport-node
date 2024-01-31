@@ -1,0 +1,14 @@
+version: "3"
+services:
+  passport:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo
+  mongo:
+    build:
+      context: .
+      dockerfile: Dockerfile.mongo
+    ports:
+      - "27017:27017"

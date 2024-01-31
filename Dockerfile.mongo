@@ -1,0 +1,11 @@
+# Use the official MongoDB image as a parent image
+FROM mongo:latest
+
+# Expose MongoDB port
+EXPOSE 27017
+
+# Set the data directory
+VOLUME ["/data/db"]
+
+# Set default command to run when the container starts
+CMD ["mongod"]
