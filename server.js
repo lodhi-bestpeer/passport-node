@@ -62,9 +62,9 @@ app.post("/login", (req, res, next) => {
     }
     const payload = { email: user.email, username: user.username };
     const token = jwt.sign(payload, 'secretsecretsecret');
-    const authorizationHeader = `Bearer ${token}`;
-    req.headers['Authorization'] = authorizationHeader;
-    req.token = authorizationHeader
+    // const authorizationHeader = `Bearer ${token}`;
+    // req.headers['Authorization'] = authorizationHeader;
+    // req.token = authorizationHeader
     // return res.redirect("/profile");
     return res.send(user)
   })(req, res, next);
