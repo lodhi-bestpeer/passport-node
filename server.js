@@ -4,13 +4,16 @@ const { connection } = require("./dbConnection");
 const passport = require("passport")
 const path = require("path");
 const expressSession = require("express-session")
+const jwt = require('jsonwebtoken');
 // const flash = require('connect-flash');
 
 const User = require("./model");
-const { passportInit, isAuthenticate } = require("./views/local.strategy");
+const { LocalStrategyPassport, isAuthenticate } = require("./passport/local.strategy");
+const { JwtStrategyPassports } = require("./passport/jwt.strategy")
 
 const app = express();
-passportInit(passport)
+LocalStrategyPassport(passport)
+JwtStrategyPassports(passport)
 
 app.use(cors("*"));
 app.use(express.json());
@@ -53,27 +56,31 @@ app.post("/register", async (req, res) => {
 
 // send custom error in the response
 app.post("/login", (req, res, next) => {
-  passport.authenticate('local', (err, user) => {
+  passport.authenticate('local', (_, user) => {
     if (!user) {
-      return res.status(401).json({ message: 'Authentication failed' });
+      return res.status(401).json({ message: 'Authentication failed. The provided credentials are not associated with any registered account. Please register to continue.' });
     }
-    req.login(user, (err) => {
-        if (err) {
-          return next(err);
-        }
-        return res.redirect("/profile");
-        // res.send(req.user)
-      });
-
+    const payload = { email: user.email, username: user.username };
+    const token = jwt.sign(payload, 'secretsecretsecret');
+    const authorizationHeader = `Bearer ${token}`;
+    req.headers['Authorization'] = authorizationHeader;
+    req.token = authorizationHeader
+    // return res.redirect("/profile");
+    return res.send(user)
   })(req, res, next);
 });
 
 
-// app.post("/login", passport.authenticate('local',{failureRedirect:"/register",successRedirect:"/profile"}));
 
-app.get("/profile", isAuthenticate,(req,res)=>{
-   res.send(req.user)
-})
+app.get("/profile", (req, res, next) => {
+  passport.authenticate('jwt', { session: false }, (err, user) => {
+    if (!user) {
+      return res.status(401).json({ message: 'Token is not valid' });
+    }
+    return res.send(user)
+  })(req, res, next);
+});
+
 
 app.get("/logout",(req, res)=>{
     req.logout((err) => {
